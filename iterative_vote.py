@@ -6,7 +6,7 @@ from collections import Counter
 import random
 import numpy as np
 import enum
-
+# from ray.rllib.utils.annotations import PublicAPI
 
 def find_majority(votes):
 
@@ -33,29 +33,25 @@ def create_profiles(voters_num, quest_num):
         agents.append((agent))
     return agents
 
-profiles = create_profiles(3,3)
-print(profiles)
-sincere_actions = [profiles[i][0] for i in range(len(profiles))]
-def calculate_result(actions):
-
-    """  (selectedaction) returns majority vote result  """
-    # actions =np.array([profiles[0][0],profiles[1][0], profiles[2][0]])
-    # act = np.array([profiles[0][0],profiles[1][0], profiles[2][0]])
-    # print(actions, " << Actions")
-    result = find_majority(actions)
-    print("MV:" ,result)
-    return result
-
-calculate_result(sincere_actions)
-
-
 
 class IterativeVote(gym.Env):
     voters_num= 3 #agents, learners
     quest_num = 3  #multiple proposals
-    profile = create_profiles(voters_num, quest_num)
+    profiles = create_profiles(voters_num, quest_num)
+
+    def result_rank(self, vresult,agent_index):
+        agent_prof = self.profiles[agent_index]
+        print("agent profile:", agent_prof)
+        rank = np.where(np.all(agent_prof ==vresult,axis=1))
+        # rank = np.where(profile[agent_index]=result)
+        return rank
+    
+    
+
 
     def __init__(self, voters_num=3,  quest_num = 3, test=False):
+        self.voters_num = voters_num
+        self.quest_num = quest_num
         self.action_space = spaces.Discrete(2**quest_num)
         self.observation_space = spaces.Discrete(1)
         self.reward_range = (0,2**quest_num - 1)
@@ -73,3 +69,28 @@ class IterativeVote(gym.Env):
     def step(self, actions):
         next_obs = calculate_result(actions)
         return next_obs
+    
+    def get_reward(self):
+        # return self.result_rank()
+        return 1
+
+
+
+
+
+
+profile = create_profiles(3,3)
+print(profile)
+sincere_actions = [profile[i][0] for i in range(len(profile))]
+def calculate_result(actions):
+
+    """  (selectedaction) returns majority vote result  """
+    result = find_majority(actions)
+    print("MV:" ,result)
+    return result
+
+res = calculate_result(sincere_actions)
+print("result is ", res)
+instance = IterativeVote(3,3)
+rank = instance.result_rank(res,1)
+print(rank[0], "rank 1")

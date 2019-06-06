@@ -34,9 +34,9 @@ class IterativeVote(gym.Env):
     def create_profiles(self, voters_num, quest_num):
 
 
-        """ (number of voters, number of questions) """
+        """ (number of voters, number of questions)
 
-        # fix seed for repeatable profiles
+         fix seed for repeatable profiles """
         np.random.seed(voters_num)
                 # create game
         agents = []
@@ -46,17 +46,43 @@ class IterativeVote(gym.Env):
             agents.append((agent))
         return agents
 
+
+    def actions_space(self,agent_index):
+        actions = self.profiles[agent_index]
+        print("actionspace for agent index:",agent_index,"is ",actions)
+        return actions
+
+
+    # def vote_sincere(self, agent_index):
+        # first_action = self.profiles[agent_index][0]
+        # print("first action for agent index", agent_index,"is" ,first_action)
+        # profile = self.action_space(self,agent_index)
+        # print(profile[0])
+        # return  first_action
+
+
+    def select_action(self,agent_index, action_index):
+        actions = self.actions_space(agent_index)
+        return actions[action_index]
+
+    def vote_sincere(self,agent_index):
+        return self.select_action(agent_index, 0)
+
+
     def calculate_result(self, actions):
 
         """  (selectedaction) returns majority vote result  """
         result = find_majority(actions)
+        self.cached_state = result
         print("MV:", result)
         return result
+
+    # def calculate_result(self, ):
 
 
     def result_rank(self, vresult,agent_index):
         agent_prof = self.profiles[agent_index]
-        print("agent profile:", agent_prof)
+        # print("agent profile:", agent_prof)
         rank = np.where(np.all(agent_prof ==vresult,axis=1))
         # rank = np.where(profile[agent_index]=result)
         return rank
@@ -65,17 +91,18 @@ class IterativeVote(gym.Env):
         self.voters_num = voters_num
         self.quest_num = quest_num
         self.action_space = spaces.Discrete(2**quest_num)
+        # self.action_space
         self.observation_space = spaces.Discrete(1)
         # self.reward_range = (0,2**quest_num - 1)
-        self.state = None
+        self.cached_state = None
         self.profiles = self.create_profiles(voters_num, quest_num)
 
     def _get_obs(self):
         # return
-        return 1
+        return self.cached_state
 
     def reset(self):
-        self.state = 0
+        self.cached_state = 0
         return self._get_obs()
 
     def step(self, actions):
@@ -83,9 +110,10 @@ class IterativeVote(gym.Env):
         next_obs = calculate_result(actions)
         return next_obs
     
-    def get_reward(self, voter_index):
+    def get_reward(self, agent_index):
         # return self.result_rank()
         # linear reward w.r.t rank of result in agent[index] profile
+        
         return 1
 
 
@@ -94,7 +122,8 @@ class IterativeVote(gym.Env):
 instance = IterativeVote(3,3)
 profile = instance.create_profiles(3,3)
 print(profile)
-sincere_actions = [profile[i][0] for i in range(len(profile))]
+# sincere_actions = [profile[i][0] for i in range(len(profile))]
+sincere_actions = [instance.vote_sincere(i) for i in range(len(profile))]
 res = instance.calculate_result(sincere_actions)
 print("result is ", res)
 rank = instance.result_rank(res,1)

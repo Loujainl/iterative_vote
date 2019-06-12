@@ -87,6 +87,17 @@ class IterativeVote(gym.Env):
         # rank = np.where(profile[agent_index]=result)
         return rank
 
+
+    def get_reward(self,result ,agent_index):
+        # return self.result_rank()
+        # linear reward w.r.t rank of result in agent[index] profile
+        rank = self.result_rank(result, agent_index)
+        # in case we want to edit linear to exponential reward
+        reward = 1/ 2**rank[0]
+        return reward
+
+
+
     def __init__(self, voters_num=3,  quest_num = 3, test=False):
         self.voters_num = voters_num
         self.quest_num = quest_num
@@ -94,8 +105,8 @@ class IterativeVote(gym.Env):
         # self.action_space
         self.observation_space = spaces.Discrete(1)
         # self.reward_range = (0,2**quest_num - 1)
-        self.cached_state = None
         self.profiles = self.create_profiles(voters_num, quest_num)
+        self.cached_state = None
 
     def _get_obs(self):
         # return
@@ -109,12 +120,6 @@ class IterativeVote(gym.Env):
 
         next_obs = calculate_result(actions)
         return next_obs
-    
-    def get_reward(self, agent_index):
-        # return self.result_rank()
-        # linear reward w.r.t rank of result in agent[index] profile
-        
-        return 1
 
 
 
@@ -124,7 +129,20 @@ profile = instance.create_profiles(3,3)
 print(profile)
 # sincere_actions = [profile[i][0] for i in range(len(profile))]
 sincere_actions = [instance.vote_sincere(i) for i in range(len(profile))]
+
 res = instance.calculate_result(sincere_actions)
 print("result is ", res)
 rank = instance.result_rank(res,1)
-print(" Result rank for agent index1 :", rank[0])
+print(" Result rank for agents:")
+# print(rank[i] for i in range(rank.shape[0]))
+reward = instance.get_reward(res,1)
+print("reward for agent index 1 is 1/2^rank", reward)
+
+new_actions = [instance.select_action(i,1) for i in range(len(profile))]
+print("selected 2nd action for all agents:")
+
+resu = instance.calculate_result(new_actions)
+print("new result", resu)
+
+rewards = instance.get_reward(resu,1)
+print("new reward for agent index 1 is",rewards)

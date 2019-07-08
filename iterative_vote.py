@@ -6,6 +6,8 @@ from collections import Counter
 import random
 import numpy as np
 import enum
+import matplotlib.pyplot as plt
+import sys
 # from ray.rllib.utils.annotations import PublicAPI
 
 
@@ -20,6 +22,26 @@ def find_majority(votes):
     q = bincnt.shape[1]
     # print(bincnt,q)
     return [1 if bincnt[1][i] > bincnt[0][i] else 0 for i in range(q)]
+
+# mab is a multi-armed bandit, implementing different exploration strategies
+
+def epsilon_greedy(mab, epsilon):
+  rand = np.random.uniform()
+  if rand < epsilon:
+    return random(mab)
+  else:
+    return np.argmax(mab.bandit_q_values)
+
+def decaying_epsilon_greedy(mab, epsilon, schedule):
+  epsilon = schedule(mab, epsilon)
+  return epsilon_greedy(mab, epsilon)
+
+def random(mab):
+  return np.random.randint(mab._no_actions)
+
+def ucb1(mab):
+  return np.argmax(mab.bandit_q_values + np.sqrt(2*np.log
+    (mab.step_counter+1)/(mab.bandit_counters+1)))
 
 
 
@@ -120,8 +142,6 @@ class IterativeVote(gym.Env):
 
         next_obs = calculate_result(actions)
         return next_obs
-
-
 
 
 instance = IterativeVote(3,3)

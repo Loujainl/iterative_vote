@@ -69,7 +69,7 @@ class IterativeVote(gym.Env):
             agent = np.reshape(list(itertools.product([0, 1], repeat = self.quest_num)), (2**self.quest_num, self.quest_num))
             np.random.shuffle(agent)
             agents.append((agent))
-        return agents
+        return np.array(agents)
 
 
     def select_agent(self, agent_index):
@@ -84,7 +84,7 @@ class IterativeVote(gym.Env):
         return self.active_agent[action_index]
 
     def vote_sincere(self):
-        return self.select_action(self.active_agent, 0)
+        return self.select_action(0)
 
 
     def calculate_result(self, actions):
@@ -101,13 +101,14 @@ class IterativeVote(gym.Env):
     def result_rank(self, agent_index):
         agent_prof = self.profiles[agent_index]
         rank = np.where(np.all(agent_prof ==self.cached_state,axis=1))
-        return rank
+        return rank[0]+1
 
 
     def get_reward(self ,agent_index):
         # return self.result_rank()
         # linear reward w.r.t rank of result in agent[index] profile
         rank = self.result_rank(agent_index)
+        print(rank)
         # in case we want to edit linear to exponential reward
         reward = 1/ 2**rank[0]
         return reward
@@ -196,10 +197,22 @@ class MAB:
 
 instance = IterativeVote(3,3)
 profile = instance.create_profiles()
-print("Profile index 1", instance.select_agent(1))
+print("Profile index 1", instance.select_agent(1), "type of iterativeVote profile is ", type(instance.profiles))
 # sincere_actions = [profile[i][0] for i in range(len(profile))]
-length = len(instance)
-sincere_actions = [instance.vote_sincere(i) for i in range(length)]
+length = len(instance.profiles)
+print(length)
+sincere_actions = []
+strategic_actions = []
+for i in range(length):
+    instance.select_agent(i)
+    action = instance.vote_sincere()
+    sincere_actions.append(action)
+    # print("selected 2nd action for all agents:")
+    new_action =instance.select_action(1)
+    strategic_actions.append(new_action)
+
+
+#sincere_actions = [instance.vote_sincere(i) for i in range(length)]
 
 res = instance.calculate_result(sincere_actions)
 print("result is ", res)
@@ -209,11 +222,10 @@ print(" Result rank for agents:")
 reward = instance.get_reward(1)
 print("reward for agent index 1 is 1/2^rank", reward)
 
-new_actions = [instance.select_action(i,1) for i in range(len(profile))]
-print("selected 2nd action for all agents:")
 
-resu = instance.calculate_result(new_actions)
-print("new result", resu)
+
+resu = instance.calculate_result(strategic_actions)
+print("choosing second action result", resu)
 
 rewards = instance.get_reward(1)
 print("new reward for agent index 1 is",rewards)

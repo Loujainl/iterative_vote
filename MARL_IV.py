@@ -220,7 +220,7 @@ class IterativeVote():
           #best_action_value = self.mabs[r].best_action()
           #regret = best_action_value - step_q_values
           #regrets.append(regret)
-          print("asi0", asi[0])
+          print("asi iteration",i ,"is", asi[i])
           #rewards.append(reward)
         return asi, rewards
 
@@ -246,9 +246,9 @@ if __name__ == '__main__':
 
   instance= IterativeVote(num_agents, num_quest) #creategame on init defines the MABS access each by:  self.mabs[index]
   best_action_index = 0
-  best_action_value = 0.7 # fix this according to the reward defined
-  print("profile of agent 1 is ", instance.mabs[1].profile)
+  best_action_value = 1 # fix this according to the reward defined
   print("profile of agent 0 is ", instance.mabs[0].profile)
+  print("profile of agent 1 is ", instance.mabs[1].profile)
   print("profile of agent 2 is ", instance.mabs[2].profile)
 
 
@@ -262,18 +262,12 @@ if __name__ == '__main__':
   print("number of actions", num_actions)
 
 
-
- # biases = [1.0 / k for k in range(5, 5+num_actions)]
-  #best_action_index = 0
-  #best_action_value = 0.7
   def best_action(mab):
     return best_action_index, best_action_value
 
 
   for strategy, parameters in strategies.items():
     print(strategy.__name__)
-   # bandits = [Bandit(bias, 1-bias) for bias in biases]
-    #mab = MAB(best_action, *bandits)
     asi, average_total_return = instance.run_all_mavs(100, strategy, **parameters)
     print("\n")
     average_total_returns[strategy.__name__] = average_total_return

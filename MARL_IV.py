@@ -9,7 +9,7 @@ def find_majority(votes):
 
 
     """votes is 2-d array, (actions submitted) """
-    print("votes are", votes)
+    #print("votes are", votes)
     bincnt = np.apply_along_axis(lambda x: np.bincount(x, minlength=2), 0, arr=votes)
     q = bincnt.shape[1]
     return [1 if bincnt[1][i] > bincnt[0][i] else 0 for i in range(q)]
@@ -41,8 +41,9 @@ def ucb1(mab):
 def plot(regrets):
   for strategy, regret in regrets.items():
     #total_regret = np.cumsum(regret)
-    plt.ylabel('Total ASI')
-    plt.plot(np.arange(len(regret)), regret, label=strategy)
+    plt.ylabel('ASI')
+    plt.xlabel('Iteration')
+    plt.plot(np.arange(len(regret)), regret, label= strategy)
   plt.legend()
   plt.savefig('asi.png')
 
@@ -64,6 +65,8 @@ class MAV:
 
             def update_q_value(self):
                 self.q_value = self.q_value + 1/self.counter * (self.step_reward - self.q_value)
+                #print("q_value updated to", self.q_value)
+
 
 
 
@@ -102,14 +105,14 @@ class MAV:
         self.step_counter += 1
         self.step_action = exploration_strategy(self, **strategy_parameters)
         self.bandits[self.step_action].counter += 1
-        print("step_action", self.step_action)
-        print("bandit counter", self.bandits[self.step_action].counter)
+        #print("step_action", self.step_action)
+        #print("bandit counter", self.bandits[self.step_action].counter)
         return self.profile[self.step_action]
 
 
 
     def result_rank(self, result):
-        print("result is ", result)
+       # print("result is ", result)
         rank = np.where(np.all(self.profile == result,axis=1))
         #rank = np.where(np.all(agent_prof ==self.cached_state,axis=1))
 
@@ -122,7 +125,7 @@ class MAV:
         rank = self.result_rank(result)
         # in case we want to edit linear to exponential reward
         reward = 1 / 2 ** rank[0]
-        print("rank for agent", rank[0], "reward for agent ", self.agent_index, "is", reward)
+        #print("rank for agent", rank[0], "reward for agent ", self.agent_index, "is", reward)
         self.bandits[self.step_action].step_reward = reward
         self.bandits[self.step_action].update_q_value()
         return reward
@@ -172,14 +175,14 @@ class IterativeVote():
 
     def get_selected_actions(self):
         actions = np.empty((self.mav_num,self.quest_num),dtype=int)
-        print("actions shape is ", actions.shape)
+       # print("actions shape is ", actions.shape)
         for i in range(self.mav_num):
             actions[i, :]= self.mabs[i].profile[self.mabs[i].step_action]
             #actions[i] = MAV(i,self.quest_num,0).step_action
-            print("mab",i,"step_action is", self.mabs[i].profile[self.mabs[i].step_action])
+            #print("mab",i,"step_action is", self.mabs[i].profile[self.mabs[i].step_action])
             #actions.append(action)
        # self.selected_actions = np.array(actions)
-        print("get_selected_actions return", actions)
+       # print("get_selected_actions return", actions)
         return actions
 
 
@@ -213,7 +216,7 @@ class IterativeVote():
               self.mabs[j].run_one_round(exploration_strategy, **strategy_parameters)
           print("strategy and parameters", exploration_strategy,strategy_parameters)
           actions = self.get_selected_actions()
-          print("selected actions", actions)
+          #print("selected actions", actions)
           result = self.calculate_result(actions)
           for r in range(self.mav_num):
               #print("agent index", r, "reward is ", self.mabs[r].get_reward(result))
@@ -264,7 +267,7 @@ if __name__ == '__main__':
   mabs = []
 
   num_actions = 2**num_quest
-  print("number of actions", num_actions)
+ # print("number of actions", num_actions)
 
 
  # def best_action(mab):
@@ -273,10 +276,11 @@ if __name__ == '__main__':
 
   for strategy, parameters in strategies.items():
     print(strategy.__name__)
-    asi, average_total_return = instance.run_all_mavs(1000, strategy, **parameters)
+    asi, average_total_return = instance.run_all_mavs(200, strategy, **parameters)
     print("\n")
     average_total_returns[strategy.__name__] = average_total_return
     asi_score[strategy.__name__] = asi
+  #print(asi_score)
   #plt.plot(asi_score)
   plot(asi_score)
 

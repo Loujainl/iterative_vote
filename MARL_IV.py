@@ -40,11 +40,11 @@ def ucb1(mab):
 
 def plot(regrets):
   for strategy, regret in regrets.items():
-    total_regret = np.cumsum(regret)
-    plt.ylabel('Total Regret')
-    plt.plot(np.arange(len(total_regret)), total_regret, label=strategy)
+    #total_regret = np.cumsum(regret)
+    plt.ylabel('Total ASI')
+    plt.plot(np.arange(len(regret)), regret, label=strategy)
   plt.legend()
-  plt.savefig('regret.png')
+  plt.savefig('asi.png')
 
 
 class MAV:
@@ -102,7 +102,8 @@ class MAV:
         self.step_counter += 1
         self.step_action = exploration_strategy(self, **strategy_parameters)
         self.bandits[self.step_action].counter += 1
-        # returns selected vote index for this round
+        print("step_action", self.step_action)
+        print("bandit counter", self.bandits[self.step_action].counter)
         return self.profile[self.step_action]
 
 
@@ -173,9 +174,12 @@ class IterativeVote():
         actions = np.empty((self.mav_num,self.quest_num),dtype=int)
         print("actions shape is ", actions.shape)
         for i in range(self.mav_num):
-            actions[i,:] = MAV(i,self.quest_num,0).step_action
+            actions[i, :]= self.mabs[i].profile[self.mabs[i].step_action]
+            #actions[i] = MAV(i,self.quest_num,0).step_action
+            print("mab",i,"step_action is", self.mabs[i].profile[self.mabs[i].step_action])
             #actions.append(action)
        # self.selected_actions = np.array(actions)
+        print("get_selected_actions return", actions)
         return actions
 
 
@@ -185,6 +189,7 @@ class IterativeVote():
         """  (selectedaction) returns majority vote result  """
         result = find_majority(actions)
         self.cached_state = result
+        print("actions are", actions,"result is",result)
        # print("MV:", result)
         return result
 
@@ -198,7 +203,7 @@ class IterativeVote():
 
         step_q_values = np.ndarray((self.mav_num,num_rounds))
         rank = np.ndarray((self.mav_num,num_rounds))
-        best_action_value = np.ndarray((self.mav_num,num_rounds))
+        #best_action_value = np.ndarray((self.mav_num,num_rounds))
         asi = []
         for i in range(num_rounds):
           if (i + 1) % 100 == 0:
@@ -211,7 +216,7 @@ class IterativeVote():
           print("selected actions", actions)
           result = self.calculate_result(actions)
           for r in range(self.mav_num):
-              print("agent index", r, "reward is ", self.mabs[r].get_reward(result))
+              #print("agent index", r, "reward is ", self.mabs[r].get_reward(result))
               rewards[r , i] = self.mabs[r].get_reward(result)
               rank[r , i] = self.mabs[r].step_rank
             #  step_q_values[r , i] = self.mabs[r].bandits.get_q_value
@@ -220,7 +225,7 @@ class IterativeVote():
           #best_action_value = self.mabs[r].best_action()
           #regret = best_action_value - step_q_values
           #regrets.append(regret)
-          print("asi iteration",i ,"is", asi[i])
+         # print("rewards iteration",i ,"is", rewards[0][i])
           #rewards.append(reward)
         return asi, rewards
 
@@ -245,8 +250,8 @@ if __name__ == '__main__':
   num_quest = 3
 
   instance= IterativeVote(num_agents, num_quest) #creategame on init defines the MABS access each by:  self.mabs[index]
-  best_action_index = 0
-  best_action_value = 1 # fix this according to the reward defined
+ # best_action_index = 0
+ # best_action_value = 1 # fix this according to the reward defined
   print("profile of agent 0 is ", instance.mabs[0].profile)
   print("profile of agent 1 is ", instance.mabs[1].profile)
   print("profile of agent 2 is ", instance.mabs[2].profile)
@@ -262,16 +267,17 @@ if __name__ == '__main__':
   print("number of actions", num_actions)
 
 
-  def best_action(mab):
-    return best_action_index, best_action_value
+ # def best_action(mab):
+  #  return best_action_index, best_action_value
 
 
   for strategy, parameters in strategies.items():
     print(strategy.__name__)
-    asi, average_total_return = instance.run_all_mavs(100, strategy, **parameters)
+    asi, average_total_return = instance.run_all_mavs(1000, strategy, **parameters)
     print("\n")
     average_total_returns[strategy.__name__] = average_total_return
     asi_score[strategy.__name__] = asi
+  #plt.plot(asi_score)
   plot(asi_score)
 
 

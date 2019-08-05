@@ -3,17 +3,14 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-
+import json
 
 def find_majority(votes):
     """votes is 2-d array, (actions submitted) """
-    # print("votes are", votes)
     bincnt = np.apply_along_axis(lambda x: np.bincount(x, minlength=2), 0, arr=votes)
     q = bincnt.shape[1]
     return [1 if bincnt[1][i] > bincnt[0][i] else 0 for i in range(q)]
 
-
-# mab is the multi-armed bandit, implementing different exploration strategies
 
 def epsilon_greedy(mab, epsilon):
     rand = np.random.uniform()
@@ -62,6 +59,8 @@ class MAV:
         def update_q_value(self):
             self.q_value = self.q_value + 1 / self.counter * (self.step_reward - self.q_value)
             # print("q_value updated to", self.q_value)
+        def get_counter(self):
+            return self.counter
 
     # each agent is a MAB
     def __init__(self, agent_index, num_quest, best_action):
@@ -116,11 +115,12 @@ class MAV:
 
     @property
     def bandit_counters(self):
-        return np.array([bandit.counter for bandit in self.bandits])
+        #print ("bandit counters",np.array([bandit.get_counter for bandit in self.bandits]) )
+        return np.array([bandit.get_counter() for bandit in self.bandits])
 
     @property
     def bandit_q_values(self):
-        return np.array([bandit.q_value for bandit in self.bandits])
+        return np.array([bandit.get_q_value() for bandit in self.bandits])
 
     @property
     def num_actions(self):
@@ -249,7 +249,7 @@ if __name__ == '__main__':
 
     # def best_action(mab):
     #  return best_action_index, best_action_value
-    num_iterations = 10000
+    num_iterations = 10
 
     for strategy, parameters in strategies.items():
         print(strategy.__name__)
@@ -257,6 +257,14 @@ if __name__ == '__main__':
         print("\n")
         average_total_returns[strategy.__name__] = average_total_return
         asi_score[strategy.__name__] = asi
+
+   # np.savetxt('asi_score.txt', asi_score, fmt='%d')
+    #np.savetxt('average_total_returns.txt', average_total_returns, fmt='%d')
+
+    json = json.dumps(asi_score)
+    f = open("asi_score.json", "w")
+    f.write(json)
+    f.close()
 
     for strategy, asi_s in asi_score.items():
         # total_regret = np.cumsum(regret)

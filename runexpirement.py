@@ -20,6 +20,7 @@ def epsilon_greedy(mab, epsilon):
     if rand < epsilon:
         return random(mab)
     else:
+        print ("current mab bandit_a_values is, we take argmax", mab.bandit_q_value)
         return np.argmax(mab.bandit_q_values)
 
 
@@ -249,35 +250,20 @@ if __name__ == '__main__':
 
     # def best_action(mab):
     #  return best_action_index, best_action_value
-    num_iterations = 10000
+    num_iterations = 100
 
     for strategy, parameters in strategies.items():
         print(strategy.__name__)
-        asi, average_total_return = instance.run_all_mavs(num_iterations, strategy, **parameters)
-        print("\n")
-        average_total_returns[strategy.__name__] = average_total_return
-        asi_score[strategy.__name__] = asi
+        if strategy == "epsilon_greedy":
+            asi, average_total_return = instance.run_all_mavs(num_iterations, strategy, **parameters)
+            print("\n")
+            average_total_returns[strategy.__name__] = average_total_return
+            asi_score[strategy.__name__] = asi
+        else: continue
 
     for strategy, asi_s in asi_score.items():
         # total_regret = np.cumsum(regret)
         plt.ylabel('ASI')
         plt.xlabel('Iteration')
-        if strategy == "epsilon_greedy":
-            plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
-            plt.legend()
-    #print ("random score 5", asi_s[5])
-            plt.savefig('asi epsilon_greedy.png')
-        if strategy == "decaying_epsilon_greedy":
-            plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
-            plt.legend()
-            # print ("random score 5", asi_s[5])
-            plt.savefig('asi decaying epsilon greedy.png')
-        if strategy == "ucb1":
-            plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
-            plt.legend()
-            # print ("random score 5", asi_s[5])
-            plt.savefig('asi ucb1.png')
-        if strategy == "random":
-            plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
-            plt.legend()
-            plt.savefig('asi random.png')
+        plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
+        plt.legend()

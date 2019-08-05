@@ -57,10 +57,17 @@ class MAV:
             return self.q_value
 
         def update_q_value(self):
-            self.q_value = self.q_value + 1 / self.counter * (self.step_reward - self.q_value)
+            self.q_value = self.q_value + 1.0 / self.counter * (self.step_reward - self.q_value)
             # print("q_value updated to", self.q_value)
         def get_counter(self):
             return self.counter
+
+        def set_step_reward(self, step_reward):
+            #print ("set step rewqrd called for ", step_reward)
+            self.step_reward = step_reward
+
+        def get_step_reward(self):
+            return self.step_reward
 
     # each agent is a MAB
     def __init__(self, agent_index, num_quest, best_action):
@@ -73,6 +80,10 @@ class MAV:
         self.step_rank = 0
         self.best_action = best_action
         self.bandits = self.createBandits()
+
+
+    def get_step_action(self):
+        return self.step_action
 
     def create_profile(self):
         profile = np.reshape(list(itertools.product([0, 1], repeat=self.num_quest)),
@@ -87,12 +98,15 @@ class MAV:
             bandits.append(bandit)
         return np.array(bandits)
 
+    def selectBandit(self, bandit_index):
+        return self.bandits[bandit_index]
+
     def run_one_round(self, exploration_strategy, **strategy_parameters):
         self.step_counter += 1
         self.step_action = exploration_strategy(self, **strategy_parameters)
         self.bandits[self.step_action].counter += 1
         # print("step_action", self.step_action)
-        # print("bandit counter", self.bandits[self.step_action].counter)
+       # print("for action index",self.step_action,"bandit counter", self.bandits[self.step_action].counter)
         return self.profile[self.step_action]
 
     def result_rank(self, result):
@@ -107,19 +121,19 @@ class MAV:
     def get_reward(self, result, *type):
         rank = self.result_rank(result)
         # in case we want to edit linear to exponential reward
-        reward = 1 / 2 ** rank[0]
-        # print("rank for agent", rank[0], "reward for agent ", self.agent_index, "is", reward)
-        self.bandits[self.step_action].step_reward = reward
+        reward = 1.0 / 2 ** rank[0]
+        self.bandits[self.step_action].set_step_reward(reward)
         self.bandits[self.step_action].update_q_value()
         return reward
 
     @property
     def bandit_counters(self):
-        #print ("bandit counters",np.array([bandit.get_counter for bandit in self.bandits]) )
+        #print ("bandit counters",np.array([bandit.get_counter() for bandit in self.bandits]) )
         return np.array([bandit.get_counter() for bandit in self.bandits])
 
     @property
     def bandit_q_values(self):
+        #print ("qvalues are", np.array([bandit.get_q_value() for bandit in self.bandits]))
         return np.array([bandit.get_q_value() for bandit in self.bandits])
 
     @property
@@ -168,7 +182,7 @@ class IterativeVote():
         """  (selectedaction) returns majority vote result  """
         result = find_majority(actions)
         self.cached_state = result
-        print("actions are", actions, "result is", result)
+        #print("actions are", actions, "result is", result)
         # print("MV:", result)
         return result
 
@@ -196,12 +210,12 @@ class IterativeVote():
                 # print("agent index", r, "reward is ", self.mabs[r].get_reward(result))
                 rewards[r, i] = self.mabs[r].get_reward(result)
                 rank[r, i] = self.mabs[r].step_rank
-                print ("rank agent",r, "iteration",i,"is ",rank[r, i])
+               # print ("rank agent",r, "iteration",i,"is ",rank[r, i])
             #  step_q_values[r , i] = self.mabs[r].bandits.get_q_value
             step_ranks = rank.sum(axis=0)[i]
-            print ("sumranks ", step_ranks)
+            #print ("sumranks ", step_ranks)
             step_asi =  step_ranks / self.mav_num# ASI per iteration is the averaged sum of agents rank
-            print ("step asi", step_asi)
+           # print ("step asi", step_asi)
             asi.append(step_asi)
             # best_action_value = self.mabs[r].best_action()
             # regret = best_action_value - step_q_values
@@ -230,13 +244,11 @@ if __name__ == '__main__':
     num_agents = 3
     num_quest = 3
 
-    instance = IterativeVote(num_agents,
-                             num_quest)  # creategame on init defines the MABS access each by:  self.mabs[index]
     # best_action_index = 0
     # best_action_value = 1 # fix this according to the reward defined
-    print("profile of agent 0 is ", instance.mabs[0].profile)
-    print("profile of agent 1 is ", instance.mabs[1].profile)
-    print("profile of agent 2 is ", instance.mabs[2].profile)
+    #print("profile of agent 0 is ", instance.mabs[0].profile)
+    #print("profile of agent 1 is ", instance.mabs[1].profile)
+    #print("profile of agent 2 is ", instance.mabs[2].profile)
 
     rewards = []
     regrets = []
@@ -249,22 +261,24 @@ if __name__ == '__main__':
 
     # def best_action(mab):
     #  return best_action_index, best_action_value
-    num_iterations = 10
+    num_iterations = 100
 
     for strategy, parameters in strategies.items():
+        instance = IterativeVote(num_agents, num_quest)  # creategame on init defines the MABS access each by:  self.mabs[index]
         print(strategy.__name__)
         asi, average_total_return = instance.run_all_mavs(num_iterations, strategy, **parameters)
         print("\n")
         average_total_returns[strategy.__name__] = average_total_return
         asi_score[strategy.__name__] = asi
 
+        json = json.dumps(asi_score)
+        f = open("asi_score.json", "w")
+        f.write(json)
+        f.close()
+
    # np.savetxt('asi_score.txt', asi_score, fmt='%d')
     #np.savetxt('average_total_returns.txt', average_total_returns, fmt='%d')
 
-    json = json.dumps(asi_score)
-    f = open("asi_score.json", "w")
-    f.write(json)
-    f.close()
 
     for strategy, asi_s in asi_score.items():
         # total_regret = np.cumsum(regret)

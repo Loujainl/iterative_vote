@@ -227,10 +227,11 @@ class IterativeVote():
 
 if __name__ == '__main__':
     def schedule(mab, epsilon):
+        #print (mab.step_counter,"mabstepcounter")
         return epsilon - 1e-6 * mab.step_counter
 
 
-    epsilon = 0.6
+    epsilon = 0.5
 
     strategies = {
         epsilon_greedy: {'epsilon': epsilon},
@@ -271,35 +272,19 @@ if __name__ == '__main__':
         average_total_returns[strategy.__name__] = average_total_return
         asi_score[strategy.__name__] = asi
 
-        json = json.dumps(asi_score)
-        f = open("asi_score.json", "w")
-        f.write(json)
-        f.close()
+    json = json.dumps(asi_score)
+    f = open("asi_score.json", "w")
+    f.write(json)
+    f.close()
 
    # np.savetxt('asi_score.txt', asi_score, fmt='%d')
     #np.savetxt('average_total_returns.txt', average_total_returns, fmt='%d')
-
 
     for strategy, asi_s in asi_score.items():
         # total_regret = np.cumsum(regret)
         plt.ylabel('ASI')
         plt.xlabel('Iteration')
-        if strategy == "epsilon_greedy":
-            plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
-            plt.legend()
-    #print ("random score 5", asi_s[5])
-            plt.savefig('asi epsilon_greedy.png')
-        if strategy == "decaying_epsilon_greedy":
-            plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
-            plt.legend()
-            # print ("random score 5", asi_s[5])
-            plt.savefig('asi decaying epsilon greedy.png')
-        if strategy == "ucb1":
-            plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
-            plt.legend()
-            # print ("random score 5", asi_s[5])
-            plt.savefig('asi ucb1.png')
-        if strategy == "random":
-            plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
-            plt.legend()
-            plt.savefig('asi random.png')
+        plt.plot(np.arange(len(asi_s)), asi_s, label=strategy)
+        plt.legend()
+        plt.savefig('asi.png')
+    plt.show()

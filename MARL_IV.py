@@ -4,6 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import json
+import time
+
+
+start = time.time()
 
 def find_majority(votes):
     """votes is 2-d array, (actions submitted) """
@@ -108,18 +112,31 @@ class MAV:
         self.bandits[self.step_action].counter += 1
         return self.profile[self.step_action]
 
-    def result_rank(self, result):
+    def result_rank(self, result): # if result is ranked 0, reward is 8-1-0 = 7, named steprank is linear reward
         rank = np.where(np.all(self.profile == result, axis=1))
+        #print ("profile is",self.profile, "selected action is ",self.step_action,"result is",result)
+        #print ("rank0", rank[0])
         step_rank = self._num_actions - 1 - rank[0]
         self.step_rank = step_rank
+        #print("returned result rank", step_rank)
         return self.step_rank
 
-    def get_reward(self, result, *type):
-        rank = self.result_rank(result)
+    def get_exp_reward(self, result, *type):
+        rank = 7 - self.result_rank(result)
         # in case we want to edit linear to exponential reward
         reward = 1.0 / 2 ** rank[0]
         self.bandits[self.step_action].set_step_reward(reward)
         self.bandits[self.step_action].update_q_value()
+        #print ("reward  exp 1/2^rank", reward, "linear is", 7 - rank)
+        return reward
+
+    def get_linear_reward(self, result, *type):
+        rank = self.result_rank(result)
+        # in case we want to edit linear to exponential reward
+        reward = rank[0]
+        self.bandits[self.step_action].set_step_reward(reward)
+        self.bandits[self.step_action].update_q_value()
+        #print ("the linear reward is 7 - rank", self.bandits[self.step_action].get_step_reward())
         return reward
 
     @property
@@ -188,9 +205,10 @@ class IterativeVote():
             actions = self.get_selected_actions()
             result = self.calculate_result(actions)
             for r in range(self.mav_num):
-                rewards[r, i] = self.mabs[r].get_reward(result)
+                rewards[r, i] = self.mabs[r].get_exp_reward(result)
                 rank[r, i] = self.mabs[r].step_rank
             step_ranks = rank.sum(axis=0)[i]
+            #print (step_ranks)
             step_asi =  step_ranks / self.mav_num# ASI per iteration is the averaged sum of agents rank
             asi.append(step_asi)
             #print("step",i, "step asi",step_asi)
@@ -207,7 +225,7 @@ if __name__ == '__main__':
     strategies = {
         epsilon_greedy: {'epsilon': epsilon},
         #decaying_epsilon_greedy: {'epsilon': epsilon, 'schedule': schedule},
-        #random: {},
+        random: {},
         ucb1: {}
     }
 
@@ -217,7 +235,7 @@ if __name__ == '__main__':
     num_quest = 3
 
     num_actions = 2 ** num_quest
-    num_iterations = 5000
+    num_iterations = 500
     num_profiles = 500
     profiles = np.ndarray(num_profiles)
     asi_all_profiles = np.ndarray((num_profiles,num_iterations))
@@ -237,7 +255,7 @@ if __name__ == '__main__':
            # print ("asi for profile",profile,"is",asi)
             asi_all_profiles[profile,:] = asi
 
-            print ("asi for profile",asi_all_profiles[profile,:])
+            #print ("asi for profile",asi_all_profiles[profile,:])
             np.dstack((swu_all_profiles,average_total_return[:,:,None]))
         #print ("type of asi all profiles", asi_all_profiles.dtype, "size", asi_all_profiles.size, "shape",
          #      asi_all_profiles.shape,"values",asi_all_profiles)
@@ -259,15 +277,10 @@ if __name__ == '__main__':
          plt.savefig('asi.png')
     plt.show()
 
-    json = json.dumps(asi_score)
-    f = open("asi_score.json", "w")
-    f.write(json)
-    f.close()
+    end = time.time()
+    print("runtime", end - start)
 
-    json = json.dumps(average_total_returns)
-    f = open("average_total_returns.json", "w")
-    f.write(json)
-    f.close()
+
     #
     # for strategy, asi in asi_score.items(): # chqnge between asi_score and average_total_returns
     #     # total_regret = np.cumsum(regret)

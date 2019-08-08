@@ -122,7 +122,7 @@ class MAV:
         return self.step_rank
 
     def get_exp_reward(self, result, *type):
-        rank = 7 - self.result_rank(result)
+        rank = 2**self.num_quest - 1 - self.result_rank(result)
         # in case we want to edit linear to exponential reward
         reward = 1.0 / 2 ** rank[0]
         self.bandits[self.step_action].set_step_reward(reward)
@@ -205,7 +205,7 @@ class IterativeVote():
             actions = self.get_selected_actions()
             result = self.calculate_result(actions)
             for r in range(self.mav_num):
-                rewards[r, i] = self.mabs[r].get_exp_reward(result)
+                rewards[r, i] = self.mabs[r].get_linear_reward(result)
                 rank[r, i] = self.mabs[r].step_rank
             step_ranks = rank.sum(axis=0)[i]
             #print (step_ranks)
@@ -217,22 +217,22 @@ class IterativeVote():
 
 if __name__ == '__main__':
     def schedule(mab, epsilon):
-        return epsilon - 1e-6 * mab.step_counter
+        return epsilon - 1e-2 * mab.step_counter
 
 
-    epsilon = 0.2
+    epsilon = 0.3
 
     strategies = {
         epsilon_greedy: {'epsilon': epsilon},
-        #decaying_epsilon_greedy: {'epsilon': epsilon, 'schedule': schedule},
+        decaying_epsilon_greedy: {'epsilon': epsilon, 'schedule': schedule},
         random: {},
         ucb1: {}
     }
 
     average_total_returns = {}
     asi_score = {}
-    num_agents = 3
-    num_quest = 3
+    num_agents = 5
+    num_quest = 5
 
     num_actions = 2 ** num_quest
     num_iterations = 500

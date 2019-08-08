@@ -89,6 +89,7 @@ class MAV:
         profile = np.reshape(list(itertools.product([0, 1], repeat=self.num_quest)),
                              (2 ** self.num_quest, self.num_quest))
         np.random.shuffle(profile)
+       # print ("profile", profile)
         return profile
 
     def createBandits(self):
@@ -146,7 +147,7 @@ class IterativeVote():
         self.mabs = self.createGame()
 
     def createGame(self):
-        np.random.seed(self.mav_num)
+        #np.random.seed(500)
         # create number of MABS objects
         mavs = []
         for i in range(self.mav_num):
@@ -171,7 +172,7 @@ class IterativeVote():
         pass
 
     def run_all_mavs(self, num_rounds, exploration_strategy, **strategy_parameters):
-        regrets = np.ndarray((self.mav_num, num_rounds))
+        #regrets = np.ndarray((self.mav_num, num_rounds))
         rewards = np.ndarray((self.mav_num, num_rounds))
 
         step_q_values = np.ndarray((self.mav_num, num_rounds))
@@ -192,8 +193,8 @@ class IterativeVote():
             step_ranks = rank.sum(axis=0)[i]
             step_asi =  step_ranks / self.mav_num# ASI per iteration is the averaged sum of agents rank
             asi.append(step_asi)
-            print("step",i, "step asi",step_asi)
-        return asi, rewards
+            #print("step",i, "step asi",step_asi)
+        return np.around(np.array(asi).astype(float),4), rewards
 
 
 if __name__ == '__main__':
@@ -201,12 +202,12 @@ if __name__ == '__main__':
         return epsilon - 1e-6 * mab.step_counter
 
 
-    epsilon = 0.5
+    epsilon = 0.2
 
     strategies = {
         epsilon_greedy: {'epsilon': epsilon},
-        decaying_epsilon_greedy: {'epsilon': epsilon, 'schedule': schedule},
-        random: {},
+        #decaying_epsilon_greedy: {'epsilon': epsilon, 'schedule': schedule},
+        #random: {},
         ucb1: {}
     }
 
@@ -216,20 +217,67 @@ if __name__ == '__main__':
     num_quest = 3
 
     num_actions = 2 ** num_quest
-    num_iterations = 50
+    num_iterations = 5000
+    num_profiles = 500
+    profiles = np.ndarray(num_profiles)
+    asi_all_profiles = np.ndarray((num_profiles,num_iterations))
+    swu_all_profiles = np.ndarray((num_agents,num_iterations,num_profiles))
+
+    #a.mean(axis=1)     # to take the mean of each row
 
     for strategy, parameters in strategies.items():
-        instance = IterativeVote(num_agents, num_quest)  # creategame on init defines the MABS access each by:  self.mabs[index]
-        print(strategy.__name__)
-        asi, average_total_return = instance.run_all_mavs(num_iterations, strategy, **parameters)
-        print("\n")
-        average_total_returns[strategy.__name__] = average_total_return
-        asi_score[strategy.__name__] = asi
+        for profile in range(num_profiles):
+            instance = IterativeVote(num_agents, num_quest)  # creategame on init defines the MABS access each by:  self.mabs[index]
+            #print (instance.mabs.profile)
+            np.append(profiles,instance)
+            print(strategy.__name__)
+            asi, average_total_return = instance.run_all_mavs(num_iterations, strategy, **parameters)
+            print("\n")
+            #print ("asi size", asi.size)
+           # print ("asi for profile",profile,"is",asi)
+            asi_all_profiles[profile,:] = asi
+
+            print ("asi for profile",asi_all_profiles[profile,:])
+            np.dstack((swu_all_profiles,average_total_return[:,:,None]))
+        #print ("type of asi all profiles", asi_all_profiles.dtype, "size", asi_all_profiles.size, "shape",
+         #      asi_all_profiles.shape,"values",asi_all_profiles)
+        average_total_returns[strategy.__name__] = swu_all_profiles.mean(axis=1)
+        asi_score[strategy.__name__] = asi_all_profiles.mean(axis=0)
+
+        #print(profiles)
+        #print("asi all profiles axis 0",asi_all_profiles[0, :])
+        #print ("mean is ", asi_all_profiles.mean(axis=0),"shape", asi_all_profiles.mean(axis=0).shape, "type",  asi_all_profiles.mean(axis=0).dtype)
+        #print (swu_all_profiles)
+
+
+    for strategy, swu in asi_score.items(): # chqnge between asi_score and average_total_return
+         # total_regret = np.cumsum(regret)
+         plt.ylabel('ASI')
+         plt.xlabel('Iteration')
+         plt.plot(np.arange(len(swu)), swu, label=strategy)
+         plt.legend()
+         plt.savefig('asi.png')
+    plt.show()
 
     json = json.dumps(asi_score)
     f = open("asi_score.json", "w")
     f.write(json)
     f.close()
-    plot(asi_score)
+
+    json = json.dumps(average_total_returns)
+    f = open("average_total_returns.json", "w")
+    f.write(json)
+    f.close()
+    #
+    # for strategy, asi in asi_score.items(): # chqnge between asi_score and average_total_returns
+    #     # total_regret = np.cumsum(regret)
+    #     plt.ylabel('ASI')
+    #     plt.xlabel('Iteration')
+    #     plt.plot(np.arange(len(asi)),  np.cumsum(asi), label=strategy)
+    #     plt.legend()
+    #     plt.savefig('asi.png')
+    # plt.show()
+
+
 
 

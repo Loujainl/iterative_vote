@@ -217,21 +217,21 @@ class IterativeVote():
 
 if __name__ == '__main__':
     def schedule(mab, epsilon):
-        return epsilon - 1e-2 * mab.step_counter
+        return epsilon - 1e-4 * mab.step_counter
 
 
     epsilon = 0.3
 
     strategies = {
         epsilon_greedy: {'epsilon': epsilon},
-        decaying_epsilon_greedy: {'epsilon': epsilon, 'schedule': schedule},
+       # decaying_epsilon_greedy: {'epsilon': epsilon, 'schedule': schedule},
         random: {},
         ucb1: {}
     }
 
     average_total_returns = {}
     asi_score = {}
-    num_agents = 5
+    num_agents = 15
     num_quest = 5
 
     num_actions = 2 ** num_quest
@@ -258,7 +258,6 @@ if __name__ == '__main__':
             #print ("asi for profile",asi_all_profiles[profile,:])
             np.dstack((swu_all_profiles,average_total_return[:,:,None]))
         #print ("type of asi all profiles", asi_all_profiles.dtype, "size", asi_all_profiles.size, "shape",
-         #      asi_all_profiles.shape,"values",asi_all_profiles)
         average_total_returns[strategy.__name__] = swu_all_profiles.mean(axis=1)
         asi_score[strategy.__name__] = asi_all_profiles.mean(axis=0)
 

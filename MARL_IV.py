@@ -174,7 +174,7 @@ class IterativeVote():
             actions = self.get_selected_actions()
             result = self.calculate_result(actions)
             for r in range(self.mav_num):
-                rewards[r, i] = self.mabs[r].get_linear_reward(result)
+                rewards[r, i] = self.mabs[r].get_exp_reward(result)
                 rank[r, i] = self.mabs[r].step_rank
             step_ranks = rank.sum(axis=0)[i]
             step_asi =  step_ranks / self.mav_num# ASI per iteration is the averaged sum of agents rank

@@ -198,7 +198,7 @@ if __name__ == '__main__':
 
     average_total_returns = {}
     asi_score = {}
-    num_agents = 5
+    num_agents = §
     num_quest = 3
 
     num_actions = 2 ** num_quest

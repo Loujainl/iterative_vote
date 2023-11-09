@@ -8,7 +8,7 @@ Title: "Multiagents Reinforcement Learning in Iterative Voting". [Link](https://
 
 Author: Loujain Liekah
 
-Supervisors: [Umberto Grandi]()
+Supervisors: [Umberto Grandi](https://www.irit.fr/~Umberto.Grandi/)
 
 
 ## Description:

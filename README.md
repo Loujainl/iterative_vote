@@ -4,7 +4,7 @@ Research And Development Internship at Institut de Recherche en Informatique de 
 
 Master thesis (March-August 2019) - [Machine Learning and Data Mining (MLDM](https://mldm.univ-st-etienne.fr/)) Master, Université Jean Monnet, Saint-Etienne.
 
-Title: "Multiagents Reinforcement Learning in Iterative Voting". [link](https://www.irit.fr/~Umberto.Grandi/wp-content/uploads/sites/128/2023/02/Layka.MARL_for_Strategic_Voting___Thesis.pdf)
+Title: "Multiagents Reinforcement Learning in Iterative Voting". [Link](https://www.irit.fr/~Umberto.Grandi/wp-content/uploads/sites/128/2023/02/Layka.MARL_for_Strategic_Voting___Thesis.pdf).
 
 Author: Loujain Liekah
 

@@ -1,5 +1,5 @@
 ## ---------------------------------------------------------------------------------------------------------------
-## Script name: iterative_vote
+## Script name: MARL_IV.py
 ## Purpose of script: Simulations of Multi-agents in iterative vote game in a Reinforcement learning environment
 ## Author: Loujain Liekah
 ## Date Created: 2019-07-29

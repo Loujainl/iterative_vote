@@ -1,3 +1,11 @@
+## ---------------------------------------------------------------------------------------------------------------
+## Script name: iterative_vote
+## Purpose of script: Simulations of Multi-agents in iterative vote game in a Reinforcement learning environment
+## Author: Loujain Liekah
+## Date Created: 2019-07-29
+## Copyright (c) Loujain Liekah, 2019
+## ----------------------------------------------------------------------------------------------------------------
+##
 import itertools
 import random
 import numpy as np
